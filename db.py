@@ -13,13 +13,7 @@ class DB:
 
     def __init__(self):
 
-        """# Проблема была в том, что при обращении к этому классу из файла не в корневой папке создавалась новая БД. Решение ниже
-        if os.path.exists('trading_db.db'):  # Проверяем, есть ли в нашей папке файл с БД
-            self.db_path = 'trading_db.db'  # Если есть, то указываем путь
-        elif os.path.exists('../trading_db.db'):  # Если не в нашей, значит уровнем выше
-            self.db_path = '../trading_db.db'  # Если есть, то указываем путь"""
-
-        self.db_path = "repost.db"
+        self.db_path = "repost.db"  # Имя файла БД
 
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
@@ -34,10 +28,6 @@ class DB:
             self.create_db('words')
             self.create_db('users')
             #self.refresh_db()
-
-    def refresh_db(self):
-
-        self.select("select 'drop table ' || name || ';' from sqlite_master where type = 'table';")  # Конструкция роняет все таблицы даже не зная из названий
 
     def create_db(self, table_name='main_db'):
 
