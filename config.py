@@ -1,7 +1,7 @@
 # https://my.telegram.org/apps
 
-api_hash = ""
-api_id = ""
+api_hash = "fabb03d7223f418c49616454b60c6119"
+api_id = "27874422"
 
 control_chanel_id = -1002180319816  # id канала в котором бот принимает команды
 

@@ -26,7 +26,7 @@ class DB:
             self.create_db('test_db')
             self.create_db('channels')
             self.create_db('words')
-            self.create_db('users')
+            self.create_db('admins')
             #self.refresh_db()
 
     def create_db(self, table_name='main_db'):

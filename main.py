@@ -32,15 +32,15 @@ class Params:  # Класс для удобного хранения и полу
     channels = []
     forward_target = []
 
-    async def get_attrs(self):
+    async def get_attrs(self):  # Загружаем данные из БД в переменные
         words = db.DB().select("SELECT * FROM words")
         for item in words:
             self.words.append(item[0])
         tmp = db.DB().select("SELECT * FROM channels")
         for item in tmp:
-            chat = await client.get_chat(item[0])
+            chat = await client.get_chat(item[0])  # переводит имя в ID
             self.channels.append(chat.id)
-        forward_target = db.DB().select("SELECT * FROM users")
+        forward_target = db.DB().select("SELECT * FROM admins")
         for item in forward_target:
             self.forward_target.append(item[0])
 
@@ -48,6 +48,7 @@ class Params:  # Класс для удобного хранения и полу
 client = Client(name="my_account", api_hash=api_hash, api_id=api_id)
 
 
+# Функция прооверяет есть ли совпадение слов
 def word_filter(words, message):
     text = message.text.lower()  # Получаем текст сообщения
     text_array = stem.lemmatize(text)  # Разбиваем текст на массив слов и приводим все слова к начальной форме
@@ -58,9 +59,11 @@ def word_filter(words, message):
     return False
 
 
+# Функция срабатывает при получении любого сообщения
 @client.on_message(filters=filters.channel)
 async def echo(client_object, message: Message):
-    await Params().get_attrs()  # Инициализация класса
+    await Params().get_attrs()  # Сразу же поддтягиваем всё из БД в переменные
+    test = 1
     if message.chat.id == config.control_chanel_id:
         logger.info(f"Получено сообщение от управляющего канала {message.chat.id}: {message.text}")
         text = message.text.lower()  # Получаем текст сообщения
@@ -70,8 +73,18 @@ async def echo(client_object, message: Message):
             if text_array[0] == 'добавить':
 
                 if text_array[1] == 'слово' or text_array[1] == 'канал' or text_array[1] == 'пользователь':
-                    db.DB().insert(commands[text_array[1]], [text_array[2]])
-                    await client_object.send_message(message.chat.id, f"{text_array[1]} добавил")
+
+                    if text_array[1] == 'канал':
+
+                        try:  # Крайне простая проверка на правильность имени канала
+                            await client.get_chat(text_array[2])
+                        except Exception:
+                            await client_object.send_message(message.chat.id, f"{text_array[2]} Несуществующий канал или ошибка в имени")
+                            test = 0
+
+                    if test:
+                        db.DB().insert(commands[text_array[1]], [text_array[2]])
+                        await client_object.send_message(message.chat.id, f"{text_array[1]} добавил")
                 else:
                     await client_object.send_message(message.chat.id, f"{text_array[1]} не найдено в списке команд")
 
@@ -91,10 +104,10 @@ async def echo(client_object, message: Message):
             elif text_array[0] == 'помощь':
                 await client_object.send_message(message.chat.id, config.help_message)
             else:
-                await client_object.send_message(message.chat.id, f'неверная команда, попробуйте написать "помощь"')
+                await client_object.send_message(message.chat.id, f'Неверная команда, попробуйте написать "помощь"')
 
         except IndexError:
-            await client_object.send_message(message.chat.id, f'неверная команда, попробуйте написать "помощь"')
+            await client_object.send_message(message.chat.id, f'Неверная команда, попробуйте написать "помощь"')
     else:
         logger.debug(f"Получено сообщение от канала {message.chat.id}: {message.text}")
         if message.chat.id in Params.channels:  # Основная логика
